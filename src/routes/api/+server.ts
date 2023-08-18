@@ -1,8 +1,10 @@
-import { writeFile, unlink } from 'fs/promises';
+import { writeFile, unlink, readFile } from 'fs/promises';
 import path from 'path';
 import { error } from '@sveltejs/kit';
 import { RateLimiter } from 'sveltekit-rate-limiter/server';
 import { uuid } from 'uuidv4';
+
+const staticDir = import.meta.env.DEV ? "./static" : "/tmp";
 
 const limiter = new RateLimiter({
   rates: {
@@ -12,7 +14,6 @@ const limiter = new RateLimiter({
 });
 
 function scheduleDelete(fileName: string, sec: number) {
-  // remove file after x seconds
   setTimeout(() => {
     unlink(getFilePath(fileName));
   }, sec * 1000);
@@ -20,7 +21,18 @@ function scheduleDelete(fileName: string, sec: number) {
 
 function getFilePath(fileName: string) {
   const baseName = path.basename(fileName);
-  return path.resolve("./" + baseName);
+  return path.resolve(staticDir, baseName);
+}
+
+/** @type {import('./$types').RequestHandler} */
+export async function GET(event) {
+  const file = event.url.searchParams.get("image");
+  const content = await readFile(getFilePath(file));
+  return new Response(content, {
+    headers: {
+      'Content-type': 'image/png'
+    },
+  });
 }
 
 /** @type {import('./$types').RequestHandler} */

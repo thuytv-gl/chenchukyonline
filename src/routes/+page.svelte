@@ -86,12 +86,19 @@
       const img = await fetch(canvas.toDataURL({ format: "png", multiplier })).then(r => r.blob());
       const formData = new FormData();
       formData.append("image", img);
-      downloadUrl = await fetch("/api", {
+      const fileName = await fetch("/api", {
         method: "POST",
         body: formData,
-      }).then(r => r.text());
+      })
+      .then(r => r.text());
+      const link = document.createElement('a');
+      link.download = fileName;
+      link.href = `/api?image=${fileName}`;
+      link.style.cssText = "width: 0; height: 0;";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       loading = false;
-      step = "preview";
     }, 100);
   }
 
@@ -101,14 +108,14 @@
 <div class="container">
 {#if step === "image"}
   <div class="form-group">
-    <label for="image" class="step1">ẢNH</label>
+    <label for="image" class="step1">CHỌN ẢNH SẢN PHẨM</label>
     <input type="file" accept="image/*" id="image" on:change={loadImage} />
   </div>
 {/if}
 
 {#if step === "signature"}
   <div class="form-group">
-    <label for="signature" class="step2">CHỮ KÝ</label>
+    <label for="signature" class="step2">CHỌN CHỮ KÝ</label>
     <input type="file" accept="image/*" id="signature" on:change={loadSignature} />
   </div>
 {/if}
@@ -119,7 +126,7 @@
       <canvas bind:this={canvasRef} id="canvas"></canvas>
     </div>
     <div class="fcenter">
-      <button class="preview-btn" on:click={preview}>TẠO ẢNH</button>
+      <button class="preview-btn" on:click={preview}>TẢI ẢNH</button>
     </div>
   </div>
 {/if}
@@ -145,25 +152,24 @@
     display: none;
   }
   label {
-    width: 70px;
-    height: 70px;
-    padding: 10px;
-    line-height: 70px;
     text-align: center;
-    border-radius: 100%;
-    margin: 10px;
     position: absolute;
-    bottom: 0;
+    bottom: 50px;
+    margin: 10px;
+    padding: 30px;
+    min-width: 100px;
   }
   a {
     font-size: 22px;
   }
   button {
-    border: 5px #3498db solid;
-    padding: 10px;
-    background: #3498db;
-    border-radius: 5px;
-    margin-top: 5px;
+    text-align: center;
+    bottom: 50px;
+    margin: 10px;
+    padding: 20px;
+    min-width: 100px;
+    border: none;
+    background: #3498bb;
     color: white;
   }
   label.step1 {
