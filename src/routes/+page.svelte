@@ -2,7 +2,6 @@
 
 <script lang="ts">
   import { browser } from "$app/environment";
-  import { v4 as uuid } from 'uuid';
   import { calcRatio, createImage, toDataUrl } from "$lib";
   type Step = "image" | "signature" | "edit" | "preview";
   let step: Step = "image";
@@ -93,15 +92,13 @@
       })
       .then(r => r.text());
       const link = document.createElement('a');
-      link.download = uuid().split('-').pop() + ".png";
+      link.download = fileName;
       link.href = `/api?image=${fileName}`;
       link.style.cssText = "width: 0; height: 0;";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      setTimeout(() => {
-        loading = false;
-      }, 500);
+      loading = false;
     }, 100);
   }
 
