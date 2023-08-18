@@ -20,7 +20,7 @@ function scheduleDelete(fileName: string, sec: number) {
 
 function getFilePath(fileName: string) {
   const baseName = path.basename(fileName);
-  return path.resolve("./static/" + baseName);
+  return path.resolve("./" + baseName);
 }
 
 /** @type {import('./$types').RequestHandler} */
