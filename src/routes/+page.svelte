@@ -1,59 +1,214 @@
-<script>
-	import Counter from './Counter.svelte';
-	import welcome from '$lib/images/svelte-welcome.webp';
-	import welcome_fallback from '$lib/images/svelte-welcome.png';
+<title>Chèn Chữ Ký online</title>
+
+<script lang="ts">
+  import { browser } from "$app/environment";
+  import { calcRatio, createImage, toDataUrl } from "$lib";
+  import { fabric } from "fabric";
+  type Step = "image" | "signature" | "edit" | "preview";
+  let step: Step = "image";
+  let image: File;
+  let signature: File;
+  let canvas: fabric.Canvas;
+  let canvasRef: HTMLCanvasElement;
+  let loading: boolean = false;
+  let multiplier = 1;
+  let downloadUrl = "/favicon.png";
+
+  function panic(msg: string) {
+    console.log(msg);
+  }
+
+  async function createCanvas(step: Step, canvasRef: HTMLCanvasElement, image: File, signature: File) {
+    if (!browser || step !== "edit" || !canvasRef) return;
+    loading = true;
+
+    const imageUrl = await toDataUrl(image);
+    const signatureUrl = await toDataUrl(signature);
+    const fImage = await createImage(imageUrl);
+    const sImage = await createImage(signatureUrl);
+    if ( !fImage.width || !fImage.height || !sImage.width || !sImage.height) {
+      return panic("Failed to import image and signature");
+    }
+
+    const maxW = document.documentElement.clientWidth * 0.95;
+    const maxH = document.documentElement.clientHeight * 0.9;
+    const ratio = calcRatio(fImage.width, fImage.height, maxW, maxH);
+    canvasRef.width = fImage.width * ratio;
+    canvasRef.height = fImage.height * ratio;
+    canvas = new fabric.Canvas("canvas");
+    if (!canvas.width || !canvas.height) {
+      return panic("Failed to create canvas");
+    }
+
+    fImage.set("top", 0);
+    fImage.set("left", 0);
+    fImage.set("scaleX", ratio);
+    fImage.set("scaleY", ratio);
+    fImage.set("selectable", false);
+    fImage.set("moveCursor", "none");
+    fImage.set("hoverCursor", "auto");
+
+    const sRatio = calcRatio(sImage.width, sImage.height, canvas.width, canvas.height) * 0.6;
+    const x = canvas.width / 2 - sImage.width / 2 * sRatio;
+    const y = canvas.height - sImage.height * sRatio;
+    sImage.set("left", x);
+    sImage.set("top", y);
+    sImage.set("scaleX", sRatio);
+    sImage.set("scaleY", sRatio);
+
+    canvas.add(fImage);
+    canvas.add(sImage);
+    canvas.requestRenderAll();
+
+    multiplier = fImage.width / canvas.width;
+    loading = false;
+  }
+
+  function loadImage(evt: Event) {
+    const target = evt.target as HTMLInputElement;
+    const file = target?.files?.[0];
+    if (!file) { return; }
+    image = file;
+    step = "signature";
+  }
+
+  function loadSignature(evt: Event) {
+    const target = evt.target as HTMLInputElement;
+    const file = target?.files?.[0];
+    if (!file) { return; }
+    signature = file;
+    step = "edit";
+  }
+
+  function preview() {
+    loading = true;
+    setTimeout(async () => {
+      const img = await fetch(canvas.toDataURL({ format: "png", multiplier })).then(r => r.blob());
+      const formData = new FormData();
+      formData.append("image", img);
+      downloadUrl = await fetch("/api", {
+        method: "POST",
+        body: formData,
+      }).then(r => r.text());
+      loading = false;
+      step = "preview";
+    }, 100);
+  }
+
+  $: createCanvas(step, canvasRef, image, signature);
 </script>
 
-<svelte:head>
-	<title>Home</title>
-	<meta name="description" content="Svelte demo app" />
-</svelte:head>
+<div class="container">
+{#if step === "image"}
+  <div class="form-group">
+    <label for="image" class="step1">ẢNH</label>
+    <input type="file" accept="image/*" id="image" on:change={loadImage} />
+  </div>
+{/if}
 
-<section>
-	<h1>
-		<span class="welcome">
-			<picture>
-				<source srcset={welcome} type="image/webp" />
-				<img src={welcome_fallback} alt="Welcome" />
-			</picture>
-		</span>
+{#if step === "signature"}
+  <div class="form-group">
+    <label for="signature" class="step2">CHỮ KÝ</label>
+    <input type="file" accept="image/*" id="signature" on:change={loadSignature} />
+  </div>
+{/if}
 
-		to your new<br />SvelteKit app
-	</h1>
+{#if step === "edit"}
+  <div style={`display: ${loading ? "none" : "block"}`}>
+    <div class="fcenter">
+      <canvas bind:this={canvasRef} id="canvas"></canvas>
+    </div>
+    <div class="fcenter">
+      <button class="preview-btn" on:click={preview}>TẠO ẢNH</button>
+    </div>
+  </div>
+{/if}
 
-	<h2>
-		try editing <strong>src/routes/+page.svelte</strong>
-	</h2>
-
-	<Counter />
-</section>
+{#if step === "preview"}
+  <div class="fcenter">
+    <a href={downloadUrl} download>Tải ảnh</a>
+  </div>
+{/if}
+{#if loading}
+  <div class="fcenter">
+    <div class="loader"></div>
+  </div>
+{/if}
+</div>
 
 <style>
-	section {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		flex: 0.6;
-	}
+  .fcenter {
+    display: flex;
+    justify-content: center;
+  }
+  input {
+    display: none;
+  }
+  label {
+    width: 70px;
+    height: 70px;
+    padding: 10px;
+    line-height: 70px;
+    text-align: center;
+    border-radius: 100%;
+    margin: 10px;
+    position: absolute;
+    bottom: 0;
+  }
+  a {
+    font-size: 22px;
+  }
+  button {
+    border: 5px #3498db solid;
+    padding: 10px;
+    background: #3498db;
+    border-radius: 5px;
+    margin-top: 5px;
+    color: white;
+  }
+  label.step1 {
+    border: 5px lightblue dashed;
+  }
+  label.step2 {
+    border: 5px green dashed;
+  }
+  label:active {
+    background: darkcyan;
+    color: white;
+  }
+  .container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
+  }
+  .loader {
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #3498db;
+    width: 100px;
+    height: 100px;
+    -webkit-animation: spin 2s linear infinite; /* Safari */
+    animation: spin 2s linear infinite;
+    margin: 10px;
+  }
 
-	h1 {
-		width: 100%;
-	}
+  .form-group {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
 
-	.welcome {
-		display: block;
-		position: relative;
-		width: 100%;
-		height: 0;
-		padding: 0 0 calc(100% * 495 / 2048) 0;
-	}
+  /* Safari */
+  @-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+  }
 
-	.welcome img {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		top: 0;
-		display: block;
-	}
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
 </style>
