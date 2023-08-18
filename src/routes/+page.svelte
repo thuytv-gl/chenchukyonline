@@ -83,7 +83,9 @@
   function preview() {
     loading = true;
     setTimeout(async () => {
-      const img = await fetch(canvas.toDataURL({ format: "png", multiplier })).then(r => r.blob());
+      const rawUrl = canvas.toDataURL({ format: "jpeg", multiplier, quality: 0.92 });
+      const img = await fetch(rawUrl).then(r => r.blob());
+      console.log(img.size);
       const formData = new FormData();
       formData.append("image", img);
       const fileName = await fetch("/api", {

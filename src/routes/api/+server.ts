@@ -2,7 +2,7 @@ import { writeFile, unlink, readFile } from 'fs/promises';
 import path from 'path';
 import { error } from '@sveltejs/kit';
 import { RateLimiter } from 'sveltekit-rate-limiter/server';
-import { uuid } from 'uuidv4';
+import { v4 as uuid  } from 'uuid';
 
 const staticDir = import.meta.env.DEV ? "./static" : "/tmp";
 
@@ -30,7 +30,7 @@ export async function GET(event) {
   const content = await readFile(getFilePath(file));
   return new Response(content, {
     headers: {
-      'Content-type': 'image/png'
+      'Content-type': 'image/jpeg'
     },
   });
 }
@@ -40,7 +40,7 @@ export async function POST(event) {
   if (await limiter.isLimited(event)) throw error(429);
   const data = await event.request.formData();
   const image = data.get("image") as File;
-  const fileName = uuid().split("-").pop() + ".png";
+  const fileName = uuid().split("-").pop() + ".jpeg";
   await writeFile(getFilePath(fileName), image.stream());
   scheduleDelete(fileName, 60 * 3);
 

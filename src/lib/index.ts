@@ -21,7 +21,7 @@ export const toDataUrl = async (file: File): Promise<string> => {
     const heic2any = (await import("heic2any")).default;
     const blobRes = await fetch(blobURL)
     const blob = await blobRes.blob()
-    const hblob = await heic2any({ blob });
+    const hblob = await heic2any({ blob, toType: "image/jpeg", quality: 0.92 });
     url = URL.createObjectURL(hblob as Blob);
   }
   return url;
