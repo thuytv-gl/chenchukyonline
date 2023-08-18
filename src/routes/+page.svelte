@@ -3,7 +3,6 @@
 <script lang="ts">
   import { browser } from "$app/environment";
   import { calcRatio, createImage, toDataUrl } from "$lib";
-  import { fabric } from "fabric";
   type Step = "image" | "signature" | "edit" | "preview";
   let step: Step = "image";
   let image: File;
@@ -21,6 +20,7 @@
   async function createCanvas(step: Step, canvasRef: HTMLCanvasElement, image: File, signature: File) {
     if (!browser || step !== "edit" || !canvasRef) return;
     loading = true;
+    const { fabric } = await import("fabric");
 
     const imageUrl = await toDataUrl(image);
     const signatureUrl = await toDataUrl(signature);
