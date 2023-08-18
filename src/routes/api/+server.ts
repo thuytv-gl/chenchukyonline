@@ -27,7 +27,8 @@ function getFilePath(fileName: string) {
 /** @type {import('./$types').RequestHandler} */
 export async function GET(event) {
   const file = event.url.searchParams.get("image");
-  const content = await readFile(getFilePath(file));
+  const content = await fetch(file).then(r => r.arrayBuffer());
+  // const content = await readFile(getFilePath(file));
   return new Response(content, {
     headers: {
       'Content-type': 'image/png'
@@ -35,14 +36,24 @@ export async function GET(event) {
   });
 }
 
+function uploadFile(file: File) {
+  const form = new FormData();
+  form.append("image", file);
+  return fetch("https://api.imgbb.com/1/upload?expiration=600&key=3072d91b05e8a8bdfc2953f2a78f102e", {
+    method: "POST",
+    body: form,
+  }).then(r => r.json());
+}
+
 /** @type {import('./$types').RequestHandler} */
 export async function POST(event) {
   if (await limiter.isLimited(event)) throw error(429);
   const data = await event.request.formData();
   const image = data.get("image") as File;
-  const fileName = uuid().split("-").pop() + ".png";
-  await writeFile(getFilePath(fileName), image.stream());
-  scheduleDelete(fileName, 60 * 3);
+  const res = await uploadFile(image);
+  // const fileName = uuid().split("-").pop() + ".png";
+  // await writeFile(getFilePath(fileName), image.stream());
+  // scheduleDelete(fileName, 60 * 3);
 
-  return new Response(fileName);
+  return new Response(res.data.url);
 }
