@@ -1,6 +1,7 @@
+import { error } from '@sveltejs/kit';
+import type { Handle } from '@sveltejs/kit';
 import { writeFile, unlink, readFile } from 'fs/promises';
 import path from 'path';
-import { error } from '@sveltejs/kit';
 import { RateLimiter } from 'sveltekit-rate-limiter/server';
 import { v4 as uuid  } from 'uuid';
 
@@ -47,3 +48,27 @@ export async function POST(event) {
 
   return new Response(fileName);
 }
+
+
+export const handle: Handle = async ({ resolve, event }) => {
+
+  // Apply CORS header for API routes
+  if (event.url.pathname.startsWith('/api')) {
+    // Required for CORS to work
+    if(event.request.method === 'OPTIONS') {
+      return new Response(null, {
+        headers: {
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': '*',
+        }
+      });
+    }
+  }
+
+  const response = await resolve(event);
+  if (event.url.pathname.startsWith('/api')) {
+        response.headers.append('Access-Control-Allow-Origin', `*`);
+  }
+  return response;
+};
