@@ -4,7 +4,8 @@ import { error } from '@sveltejs/kit';
 import { RateLimiter } from 'sveltekit-rate-limiter/server';
 import { v4 as uuid  } from 'uuid';
 
-const staticDir = import.meta.env.DEV ? "./static" : "/tmp";
+const staticDir = process.env.DEV ? "./static" : "/tmp";
+console.log("[DEBUG] ", { staticDir });
 
 const limiter = new RateLimiter({
   rates: {
