@@ -29,10 +29,19 @@ function getFilePath(fileName: string) {
 export async function POST(event) {
   if (await limiter.isLimited(event)) throw error(429);
 
-  const data = await event.request.formData();
-  const image = data.get("image") as File;
-  const fileName = uuid().split("-").pop() + ".jpeg";
-  await writeFile(getFilePath(fileName), image.stream());
+  const formData = await event.request.formData();
+  const file = formData.get('image') as Blob;
+  const fileName = formData.get('file')?.name ?? uuid().split("-").pop() + ".jpeg";
+  if (!file) {
+    return new Response(JSON.stringify({ message: 'No file uploaded' }), {
+      status: 400,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+
+  await writeFile(getFilePath(fileName), file.stream());
   scheduleDelete(fileName, 60 * 3);
   return new Response(JSON.stringify({ fileName }), {
     headers: {

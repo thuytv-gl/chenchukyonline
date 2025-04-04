@@ -88,22 +88,27 @@
       const imageData = canvas.toDataURL({ format: "jpeg", multiplier, quality: 0.92 });
       const img = await fetch(imageData).then(r => r.blob());
       const formData = new FormData();
-      formData.append("image", img);
+      const fileName = uuid().split("-").pop() + ".jpeg";
+      formData.append("image", img, fileName);
       const response = await fetch("/api", {
         method: "POST",
         body: formData,
         redirect: "manual",
-      }).then(r => r.json());
+      });
 
-      if (response.fileName) {
-        return window.location.href = `/api/${response.fileName}`;
+      if (response.ok) {
+        const { fileName } = await response.json();
+        if (fileName) {
+          loading = false;
+          return window.location.href = `/api/${fileName}`;
+        } else {
+          throw new Error("fileName not exists");
+        }
       }
-
-      throw new Error("did not redirect");
+      throw new Error("Upload failed");
     } catch(e) {
-      window.alert("Đã có lỗi xảy ra vui lòng thử lại sau!");
-    } finally {
       loading = false;
+      window.alert("Đã có lỗi xảy ra vui lòng thử lại sau! " + e.message);
     }
   }
 
