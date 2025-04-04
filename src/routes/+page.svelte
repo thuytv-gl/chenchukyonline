@@ -106,10 +106,19 @@
     }, 0);
   }
 
+  function dataURLtoBlob(dataurl: string) {
+      let arr = dataurl.split(','), mime = arr?.[0]?.match(/:(.*?);/)?.[1],
+          bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+      while(n--){
+          u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new Blob([u8arr], {type:mime});
+  }
+
   function saveImage(e: any) {
-    console.log(e);
     const fileName = uuid().split("-").pop() + ".jpeg";
-    e.target.href = canvas.toDataURL({ format: "jpeg", multiplier, quality: 0.92 })
+    const img = canvas.toDataURL({ format: "jpeg", multiplier, quality: 0.92 })
+    e.target.href = URL.createObjectURL(dataURLtoBlob(img));
     e.target.download = fileName;
   }
 
