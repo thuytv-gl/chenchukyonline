@@ -93,7 +93,6 @@
       const response = await fetch("/api", {
         method: "POST",
         body: formData,
-        redirect: "manual",
       });
 
       if (response.ok) {
