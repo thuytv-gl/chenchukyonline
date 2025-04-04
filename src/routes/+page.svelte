@@ -88,11 +88,22 @@
       const img = dataURLtoBlob(imageData);
       const formData = new FormData();
       formData.append("image", img);
-      const fileName = await fetch("/api", {
+      const response = await fetch("/api", {
         method: "POST",
         body: formData,
-      }).then(r => r.text());
-      window.location.href = `/api/${fileName}`;
+        redirect: 'follow'
+      });
+      if (response.redirected) {
+        // This gets the URL after redirect
+        return window.location.href = response.url;
+      } else {
+        // Check for Location header as fallback
+        const redirectUrl = response.headers.get('Location');
+        if (redirectUrl) {
+          return window.location.href = redirectUrl;
+        }
+      }
+      throw new Error("did not redirect");
     } catch(e) {
       window.alert("Đã có lỗi xảy ra vui lòng thử lại sau!");
     } finally {
