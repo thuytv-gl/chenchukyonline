@@ -3,6 +3,8 @@
 <script lang="ts">
   import { browser } from "$app/environment";
   import { calcRatio, createImage, toDataUrl } from "$lib";
+  import { v4 as uuid  } from 'uuid';
+
   type Step = "image" | "signature" | "edit" | "preview";
   let step: Step = "image";
   let image: File;
@@ -101,7 +103,14 @@
       link.click();
       document.body.removeChild(link);
       loading = false;
-    }, 100);
+    }, 0);
+  }
+
+  function saveImage(e: any) {
+    console.log(e);
+    const fileName = uuid().split("-").pop() + ".jpeg";
+    e.target.href = canvas.toDataURL({ format: "jpeg", multiplier, quality: 0.92 })
+    e.target.download = fileName;
   }
 
   $: createCanvas(step, canvasRef, image, signature);
@@ -128,7 +137,7 @@
       <canvas bind:this={canvasRef} id="canvas"></canvas>
     </div>
     <div class="fcenter">
-      <button class="preview-btn" on:click={preview}>TẢI ẢNH</button>
+      <a href="/" class="preview-btn" on:click={saveImage}>TẢI ẢNH</a>
     </div>
   </div>
 {/if}
@@ -164,7 +173,7 @@
   a {
     font-size: 22px;
   }
-  button {
+  .preview-btn {
     text-align: center;
     bottom: 50px;
     margin: 10px;
