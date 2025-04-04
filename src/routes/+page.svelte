@@ -86,7 +86,7 @@
     loading = true;
     try {
       const imageData = canvas.toDataURL({ format: "jpeg", multiplier, quality: 0.92 });
-      const img = dataURLtoBlob(imageData);
+      const img = await fetch(imageData).then(r => r.blob());
       const formData = new FormData();
       formData.append("image", img);
       const response = await fetch("/api", {
@@ -106,14 +106,6 @@
     }
   }
 
-  function dataURLtoBlob(dataurl: string) {
-    let arr = dataurl.split(','), mime = arr?.[0]?.match(/:(.*?);/)?.[1],
-      bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
-    while(n--){
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new Blob([u8arr], {type:mime});
-  }
   $: createCanvas(step, canvasRef, image, signature)
     .catch(() => {
       window.alert("Đã có lỗi xảy ra vui lòng thử lại sau!");
