@@ -34,6 +34,5 @@ export async function POST(event) {
   const fileName = uuid().split("-").pop() + ".jpeg";
   await writeFile(getFilePath(fileName), image.stream());
   scheduleDelete(fileName, 60 * 3);
-
   return Response.redirect(`${event.request.url}/${fileName}`)
 }

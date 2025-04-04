@@ -83,6 +83,7 @@
   }
 
   async function preview() {
+    loading = true;
     try {
       const imageData = canvas.toDataURL({ format: "jpeg", multiplier, quality: 0.92 });
       const img = dataURLtoBlob(imageData);
@@ -91,18 +92,12 @@
       const response = await fetch("/api", {
         method: "POST",
         body: formData,
-        redirect: 'follow'
       });
+
       if (response.redirected) {
-        // This gets the URL after redirect
         return window.location.href = response.url;
-      } else {
-        // Check for Location header as fallback
-        const redirectUrl = response.headers.get('Location');
-        if (redirectUrl) {
-          return window.location.href = redirectUrl;
-        }
       }
+
       throw new Error("did not redirect");
     } catch(e) {
       window.alert("Đã có lỗi xảy ra vui lòng thử lại sau!");
