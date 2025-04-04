@@ -92,10 +92,11 @@
       const response = await fetch("/api", {
         method: "POST",
         body: formData,
-      });
+        redirect: "manual",
+      }).then(r => r.json());
 
-      if (response.redirected) {
-        return window.location.href = response.url;
+      if (response.fileName) {
+        return window.location.href = `/api/${response.fileName}`;
       }
 
       throw new Error("did not redirect");
