@@ -1,6 +1,6 @@
-import { error } from '@sveltejs/kit';
-import { writeFile, unlink, readFile } from 'fs/promises';
 import path from 'path';
+import { error, type RequestHandler } from '@sveltejs/kit';
+import { writeFile, unlink } from 'fs/promises';
 import { RateLimiter } from 'sveltekit-rate-limiter/server';
 import { v4 as uuid  } from 'uuid';
 
@@ -25,13 +25,16 @@ function getFilePath(fileName: string) {
   return path.resolve(staticDir, baseName);
 }
 
-/** @type {import('./$types').RequestHandler} */
-export async function POST(event) {
+const NameList: string[] = [];
+export const POST: RequestHandler = async (event) => {
   if (await limiter.isLimited(event)) throw error(429);
+  if (NameList.length === 0) {
+    NameList.push(...uuid().split("-"));
+  }
 
   const formData = await event.request.formData();
-  const file = formData.get('image') as Blob;
-  const fileName = formData.get('file')?.name ?? uuid().split("-").pop() + ".jpeg";
+  const file = formData.get('image') as File | undefined;
+  const fileName = file?.name ?? NameList.pop()!;
   if (!file) {
     return new Response(JSON.stringify({ message: 'No file uploaded' }), {
       status: 400,
@@ -41,7 +44,8 @@ export async function POST(event) {
     });
   }
 
-  await writeFile(getFilePath(fileName), file.stream());
+  const buffer = await file.arrayBuffer();
+  await writeFile(getFilePath(fileName), new Uint8Array(buffer));
   scheduleDelete(fileName, 60 * 3);
   return new Response(JSON.stringify({ fileName }), {
     headers: {

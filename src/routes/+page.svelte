@@ -3,26 +3,25 @@
 <script lang="ts">
   import { browser } from "$app/environment";
   import { calcRatio, createImage, toDataUrl } from "$lib";
-  import { v4 as uuid  } from 'uuid';
+  import Canvas from "./Canvas";
 
   type Step = "image" | "signature" | "edit" | "preview";
   let step: Step = "image";
   let image: File;
   let signature: File;
-  let canvas: fabric.Canvas;
+  let canvas: Canvas;
   let canvasRef: HTMLCanvasElement;
   let loading: boolean = false;
   let multiplier = 1;
   let downloadUrl = "/favicon.png";
 
   function panic(msg: string) {
-    console.log(msg);
+    window.alert(msg);
   }
 
   async function createCanvas(step: Step, canvasRef: HTMLCanvasElement, image: File, signature: File) {
     if (!browser || step !== "edit" || !canvasRef) return;
     loading = true;
-    const { fabric } = await import("fabric");
 
     const imageUrl = await toDataUrl(image);
     const signatureUrl = await toDataUrl(signature);
@@ -37,7 +36,7 @@
     const ratio = calcRatio(fImage.width, fImage.height, maxW, maxH);
     canvasRef.width = fImage.width * ratio;
     canvasRef.height = fImage.height * ratio;
-    canvas = new fabric.Canvas("canvas");
+    canvas = new Canvas("canvas");
     if (!canvas.width || !canvas.height) {
       return panic("Failed to create canvas");
     }
@@ -88,32 +87,31 @@
       const imageData = canvas.toDataURL({ format: "jpeg", multiplier, quality: 0.92 });
       const img = await fetch(imageData).then(r => r.blob());
       const formData = new FormData();
-      const fileName = uuid().split("-").pop() + ".jpeg";
-      formData.append("image", img, fileName);
+      formData.append("image", img);
       const response = await fetch("/api", {
         method: "POST",
         body: formData,
       });
 
+      loading = false;
       if (response.ok) {
         const { fileName } = await response.json();
         if (fileName) {
-          loading = false;
           return window.location.href = `/api/${fileName}`;
-        } else {
-          throw new Error("fileName not exists");
         }
+        throw new Error("Missing fileName in response body");
       }
-      throw new Error("Upload failed");
-    } catch(e) {
+      throw new Error("Failed to upload file");
+    } catch(e: any) {
       loading = false;
-      window.alert("Đã có lỗi xảy ra vui lòng thử lại sau! " + e.message);
+      panic("Đã có lỗi xảy ra vui lòng thử lại sau! " + e.message);
     }
   }
 
   $: createCanvas(step, canvasRef, image, signature)
-    .catch(() => {
-      window.alert("Đã có lỗi xảy ra vui lòng thử lại sau!");
+    .catch((e) => {
+      console.log(e);
+      panic("Lỗi! Không thể khởi tạo trang. Vui lòng thử lại sau.");
     });
 </script>
 
@@ -137,8 +135,34 @@
     <div class="fcenter">
       <canvas bind:this={canvasRef} id="canvas"></canvas>
     </div>
+
     <div class="fcenter">
-      <button class="preview-btn" on:click={preview}>TẢI ẢNH</button>
+    <button class="preview-btn history-btn" on:click={() => canvas.undo()}>
+       <svg fill="#ffffff" height="18px" width="18px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 26.676 26.676" xml:space="preserve">
+          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+          <g id="SVGRepo_iconCarrier">
+             <g>
+                <path d="M26.105,21.891c-0.229,0-0.439-0.131-0.529-0.346l0,0c-0.066-0.156-1.716-3.857-7.885-4.59 c-1.285-0.156-2.824-0.236-4.693-0.25v4.613c0,0.213-0.115,0.406-0.304,0.508c-0.188,0.098-0.413,0.084-0.588-0.033L0.254,13.815 C0.094,13.708,0,13.528,0,13.339c0-0.191,0.094-0.365,0.254-0.477l11.857-7.979c0.175-0.121,0.398-0.129,0.588-0.029 c0.19,0.102,0.303,0.295,0.303,0.502v4.293c2.578,0.336,13.674,2.33,13.674,11.674c0,0.271-0.191,0.508-0.459,0.562 C26.18,21.891,26.141,21.891,26.105,21.891z"></path>
+             </g>
+          </g>
+       </svg>
+    </button>
+    <button class="preview-btn history-btn" on:click={() => canvas.redo()} style="transform:matrix(-1, 0, 0, 1, 0, 0);">
+       <svg fill="#ffffff" height="18px" width="18px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 26.676 26.676" xml:space="preserve" stroke="#ffffff">
+          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+          <g id="SVGRepo_iconCarrier">
+             <g>
+                <path d="M26.105,21.891c-0.229,0-0.439-0.131-0.529-0.346l0,0c-0.066-0.156-1.716-3.857-7.885-4.59 c-1.285-0.156-2.824-0.236-4.693-0.25v4.613c0,0.213-0.115,0.406-0.304,0.508c-0.188,0.098-0.413,0.084-0.588-0.033L0.254,13.815 C0.094,13.708,0,13.528,0,13.339c0-0.191,0.094-0.365,0.254-0.477l11.857-7.979c0.175-0.121,0.398-0.129,0.588-0.029 c0.19,0.102,0.303,0.295,0.303,0.502v4.293c2.578,0.336,13.674,2.33,13.674,11.674c0,0.271-0.191,0.508-0.459,0.562 C26.18,21.891,26.141,21.891,26.105,21.891z"></path>
+             </g>
+          </g>
+       </svg>
+    </button>
+    </div>
+
+    <div class="fcenter">
+      <button class="preview-btn" on:click={preview}>Tải Ảnh</button>
     </div>
   </div>
 {/if}
@@ -183,6 +207,12 @@
     border: none;
     background: #3498bb;
     color: white;
+    cursor: pointer;
+  }
+  .history-btn {
+    padding: 10px;
+    min-width: 60px;
+    background: #000000;
   }
   label.step1 {
     border: 5px lightblue dashed;

@@ -1,6 +1,6 @@
+import type { RequestHandler } from '@sveltejs/kit';
 import { readFile } from 'fs/promises';
 import path from 'path';
-import type { RequestHandler } from '../$types';
 
 const staticDir = "/tmp";
 console.log("[DEBUG] ", { staticDir });
@@ -10,7 +10,7 @@ function getFilePath(fileName: string) {
   return path.resolve(staticDir, baseName);
 }
 
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler<{ filename: string }> = async ({ params }) => {
   const { filename } = params;
   const content = await readFile(getFilePath(filename));
   return new Response(content, {
