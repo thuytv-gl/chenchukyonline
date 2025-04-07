@@ -1,5 +1,5 @@
 import path from 'path';
-import { error, HttpError_1, type RequestHandler } from '@sveltejs/kit';
+import { error, type RequestHandler } from '@sveltejs/kit';
 import { writeFile, unlink } from 'fs/promises';
 import { RateLimiter } from 'sveltekit-rate-limiter/server';
 import { v4 as uuid  } from 'uuid';
@@ -40,20 +40,20 @@ export const POST: RequestHandler = async (event) => {
 
   const [err, formData] = await resolve<FormData>(event.request.formData());
   if (err) {
-    throw new HttpError_1(400, "missing form data");
+    throw error(400, "missing form data");
   }
   const file = formData.get('image') as File | undefined;
   if (!file) {
-    throw new HttpError_1(400, "No file uploaded");
+    throw error(400, "No file uploaded");
   }
   const fileName = uuid().split("-")[0] + ".jpeg";
   const [err1, buffer] = await resolve(file.arrayBuffer());
   if (err1) {
-    throw new HttpError_1(500, "cannot get file buffer");
+    throw error(500, "cannot get file buffer");
   }
   const [err2] = await resolve(writeFile(getFilePath(fileName), new Uint8Array(buffer)));
   if (err2) {
-    throw new HttpError_1(500, "cannot writw file");
+    throw error(500, "cannot writw file");
   }
 
   scheduleDelete(fileName, 60 * 3);
