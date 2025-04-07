@@ -19,6 +19,15 @@
     window.alert(msg);
   }
 
+  async function resolve<T>(promise: Promise<T>): Promise<[null, T] | [Error, null]> {
+      try {
+          const res = await promise
+          return [null, res];
+      } catch (err: any) {
+          return [err, null];
+      }
+  }
+
   async function request(input: RequestInfo, init?: RequestInit): Promise<[null, Response] | [Error, null]> {
     try {
       const res = await fetch(input, init);
@@ -98,14 +107,16 @@
       if (err0) {
         throw new Error("Failed to export Image from canvas");
       }
-      const imgBlob = await img.blob();
+      const [err2, imgBlob] = await resolve<Blob>(img.blob());
+      if (err2) {
+        throw new Error("Failed to get blob");
+      };
       const formData = new FormData();
       formData.append("image", imgBlob);
       const [err1, response] = await request("/api", {
         method: "POST",
         body: formData,
       });
-      loading = false;
 
       if (err1) {
         throw new Error("Failed to Upload file");
@@ -116,11 +127,12 @@
         if (!fileName) {
           throw new Error("Missing fileName in response body");
         }
+        loading = false;
         return window.location.href = `/api/${fileName}`;
       }
     } catch(e: any) {
       loading = false;
-      panic("Đã có lỗi xảy ra vui lòng thử lại sau! " + e.message);
+      return panic("Đã có lỗi xảy ra vui lòng thử lại sau! " + e.message);
     }
   }
 
