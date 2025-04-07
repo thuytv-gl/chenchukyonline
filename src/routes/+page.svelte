@@ -19,6 +19,15 @@
     window.alert(msg);
   }
 
+  async function request(input: RequestInfo, init?: RequestInit): Promise<[null, Response] | [Error, null]> {
+    try {
+      const res = await fetch(input, init);
+      return [null, res];
+    } catch(e: any) {
+        return [e, null];
+    }
+  }
+
   async function createCanvas(step: Step, canvasRef: HTMLCanvasElement, image: File, signature: File) {
     if (!browser || step !== "edit" || !canvasRef) return;
     loading = true;
@@ -85,23 +94,30 @@
     loading = true;
     try {
       const imageData = canvas.toDataURL({ format: "jpeg", multiplier, quality: 0.92 });
-      const img = await fetch(imageData).then(r => r.blob());
+      const [err0, img] = await request(imageData);
+      if (err0) {
+        throw new Error("Failed to export Image from canvas");
+      }
+      const imgBlob = await img.blob();
       const formData = new FormData();
-      formData.append("image", img);
-      const response = await fetch("/api", {
+      formData.append("image", imgBlob);
+      const [err1, response] = await request("/api", {
         method: "POST",
         body: formData,
       });
-
       loading = false;
-      if (response.ok) {
-        const { fileName } = await response.json();
-        if (fileName) {
-          return window.location.href = `/api/${fileName}`;
-        }
-        throw new Error("Missing fileName in response body");
+
+      if (err1) {
+        throw new Error("Failed to Upload file");
       }
-      throw new Error("Failed to upload file");
+
+      if (!err1 && response.ok) {
+        const { fileName } = await response.json();
+        if (!fileName) {
+          throw new Error("Missing fileName in response body");
+        }
+        return window.location.href = `/api/${fileName}`;
+      }
     } catch(e: any) {
       loading = false;
       panic("Đã có lỗi xảy ra vui lòng thử lại sau! " + e.message);

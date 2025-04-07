@@ -25,16 +25,12 @@ function getFilePath(fileName: string) {
   return path.resolve(staticDir, baseName);
 }
 
-const NameList: string[] = [];
 export const POST: RequestHandler = async (event) => {
   if (await limiter.isLimited(event)) throw error(429);
-  if (NameList.length === 0) {
-    NameList.push(...uuid().split("-"));
-  }
 
   const formData = await event.request.formData();
   const file = formData.get('image') as File | undefined;
-  const fileName = file?.name ?? NameList.pop()!;
+  const fileName = uuid().split("-")[0];
   if (!file) {
     return new Response(JSON.stringify({ message: 'No file uploaded' }), {
       status: 400,
