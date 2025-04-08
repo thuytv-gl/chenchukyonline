@@ -135,7 +135,10 @@
       const imgFile = base64ToFile(imageData, uuid().split("-")[0]);
       const body = new FormData();
       body.append("image", imgFile);
-      const [err1, uploadReq] = await resolve(fetch("/api", { method: "POST", body, }));
+      const [err1, uploadReq] = await resolve(fetch(
+        `${window.location.origin}/api`,
+        { method: "POST", body, }
+      ));
 
       if (err1) {
         console.error("upload file");
