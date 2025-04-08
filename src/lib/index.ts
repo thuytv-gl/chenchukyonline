@@ -28,6 +28,9 @@ export const toDataUrl = async (file: File): Promise<string> => {
 }
 
 export const iOS = () => {
+  if (!browser) {
+    return false;
+  }
   return [
     'iPad Simulator',
     'iPhone Simulator',
