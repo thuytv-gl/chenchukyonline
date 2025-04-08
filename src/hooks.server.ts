@@ -9,4 +9,11 @@ const requestLogger: Handle = createRequestLogger({
   logCookies: false
 });
 
-export const handle = sequence(requestLogger);
+export const handle = sequence(requestLogger, async ({ event, resolve }) => {
+	const response = await resolve(event);
+
+	response.headers.set('Access-Control-Allow-Origin', '*'); // Or specify your allowed origin(s)
+	response.headers.set('Access-Control-Allow-Credentials', 'true'); // If you need to send cookies
+
+	return response;
+});
