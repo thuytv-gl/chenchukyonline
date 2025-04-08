@@ -6,6 +6,7 @@
   import Canvas from "./Canvas";
   import { onMount } from 'svelte';
   import { createScreenLogger } from '$lib/debugConsole';
+  import { v4 as uuid  } from 'uuid';
   
   let screenLogger: ReturnType<typeof createScreenLogger>;
   
@@ -109,21 +110,31 @@
     step = "edit";
   }
 
+  function base64ToFile(dataUrl: string, filename: string) {
+    // Extract the MIME type and base64 data
+    const arr = dataUrl.split(',');
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    const mime = mimeMatch ? mimeMatch[1] : '';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+
+    // Convert the base64 data to a Uint8Array
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+
+    // Create a new File object
+    return new File([u8arr], filename, { type: mime });
+  }
+
   async function preview() {
     loading = true;
     try {
       const imageData = canvas.toDataURL({ format: "jpeg", multiplier, quality: 0.92 });
-      const [err0, img] = await resolve<Response>(fetch(imageData));
-      if (err0) {
-        throw new Error("Failed to export Image from canvas");
-      }
-      const [err2, imgBlob] = await resolve<Blob>(img.blob());
-      if (err2) {
-        console.error("Failed to get blob");
-        throw err2;
-      };
+      const imgFile = base64ToFile(imageData, uuid().split("-")[0]);
       const body = new FormData();
-      body.append("image", imgBlob);
+      body.append("image", imgFile);
       const [err1, uploadReq] = await resolve(fetch("/api", { method: "POST", body, }));
 
       if (err1) {
