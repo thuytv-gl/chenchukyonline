@@ -4,6 +4,25 @@
   import { browser } from "$app/environment";
   import { calcRatio, createImage, toDataUrl } from "$lib";
   import Canvas from "./Canvas";
+  import { onMount } from 'svelte';
+  import { createScreenLogger } from '$lib/debugConsole';
+  
+  let screenLogger: ReturnType<typeof createScreenLogger>;
+  
+  onMount(() => {
+    if (browser) {
+      // Only initialize in browser environment
+      screenLogger = createScreenLogger({
+        position: 'bottom',
+        theme: 'dark',
+        maxLogs: 100
+      });
+      
+      return () => {
+        screenLogger.restore();
+      };
+    }
+  });
 
   type Step = "image" | "signature" | "edit" | "preview";
   let step: Step = "image";
