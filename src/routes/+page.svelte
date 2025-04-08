@@ -36,7 +36,7 @@
 
   type Step = "edit" | "preview";
   let step: Step = "edit";
-  let image: File;
+  let ready: boolean;
   let canvas: Canvas;
   let canvasRef: HTMLCanvasElement;
   let loading: boolean = false;
@@ -47,8 +47,13 @@
     window.alert(msg);
   }
 
-  async function createCanvas(canvasRef: HTMLCanvasElement, image: File) {
-    if (!browser || !canvasRef || !image) return;
+  async function createCanvas(canvasRef: HTMLCanvasElement) {
+    if (!browser || !canvasRef) return;
+    canvas = new Canvas(canvasRef);
+  }
+
+  async function addImage(image?: File) {
+    if (!browser || !image) return;
     loading = true;
 
     const imageUrl = await toDataUrl(image);
@@ -56,25 +61,19 @@
     const maxW = document.documentElement.clientWidth * 0.8;
     const maxH = document.documentElement.clientHeight * 0.8;
 
+    if (!canvas.width || !canvas.height) {
+      return panic("Failed to create canvas");
+    }
+
     if ( !fImage.width || !fImage.height) {
       return panic("Failed to import image");
     }
 
     const ratio = calcRatio(fImage.width, fImage.height, maxW, maxH);
-
-    canvasRef.width = fImage.width * ratio;
-    canvasRef.height = fImage.height * ratio;
-
-    if (!canvas) {
-      canvas = new Canvas("canvas");
-    }
-
-    if (!canvas.width || !canvas.height) {
-      return panic("Failed to create canvas");
-    }
+    const ID = "F_Image";
 
     canvas.getObjects().forEach((o: any) => {
-      if (o.id === "F_Image") {
+      if (o.id === ID) {
         canvas.remove(o);
       }
     });
@@ -83,7 +82,7 @@
     canvas.setHeight(fImage.height * ratio);
     canvas.calcOffset();
 
-    (fImage as any).id = "F_Image";
+    (fImage as any).id = ID;
     fImage.set("top", 0);
     fImage.set("left", 0);
     fImage.set("scaleX", ratio);
@@ -98,6 +97,7 @@
 
     multiplier = fImage.width / canvas.width;
     loading = false;
+    ready = true;
   }
 
   async function addSignature(signature?: File) {
@@ -127,7 +127,7 @@
     const target = evt.target as HTMLInputElement;
     const file = target?.files?.[0];
     if (!file) { return; }
-    image = file;
+    addImage(file);
   }
 
   function loadSignature(evt: Event) {
@@ -137,32 +137,12 @@
     addSignature(file);
   }
 
-  function base64ToFile(dataUrl: string) {
-    // Extract the MIME type and base64 data
-    const arr = dataUrl.split(',');
-    const mimeMatch = arr[0].match(/:(.*?);/);
-    const mime = mimeMatch ? mimeMatch[1] : '';
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-
-    // Convert the base64 data to a Uint8Array
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-
-    // Create a new File object
-    return new File([u8arr], Date.now().toString(), { type: mime });
-  }
-
   async function preview() {
-    const imageData = canvas.toDataURL({ format: "jpeg", multiplier, quality: 0.92 });
-    const imgFile = base64ToFile(imageData);
-    downloadUrl = window.URL.createObjectURL(imgFile);
+    downloadUrl = canvas.toDataURL({ format: "jpeg", multiplier, quality: 0.92 });
     step = "preview";
   }
 
-  $: createCanvas(canvasRef, image)
+  $: createCanvas(canvasRef)
     .catch((e) => {
       console.log(e);
       panic("Lỗi! Không thể khởi tạo trang. Vui lòng thử lại sau.");
@@ -184,7 +164,7 @@
       </div>
       
       <div class="fcenter">
-        {#if image}
+        {#if ready}
           <button class="preview-btn history-btn" on:click={() => canvas.undo()}>
              <svg fill="#ffffff" height="18px" width="18px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 26.676 26.676" xml:space="preserve">
                 <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -196,7 +176,7 @@
                 </g>
              </svg>
           </button>
-          <button class="preview-btn" on:click={preview}>XEM ẢNH</button>
+          <button class="preview-btn" on:click={preview}>TẢI ẢNH</button>
           <button class="preview-btn history-btn" on:click={() => canvas.redo()} style="transform:matrix(-1, 0, 0, 1, 0, 0);">
              <svg fill="#ffffff" height="18px" width="18px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 26.676 26.676" xml:space="preserve" stroke="#ffffff">
                 <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
