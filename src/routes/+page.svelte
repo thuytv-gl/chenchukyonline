@@ -145,14 +145,34 @@
 <div class="container">
 {#if step === "image"}
   <div class="form-group">
-    <label for="image" class="step1">CHỌN ẢNH SẢN PHẨM</label>
+    <label for="image" class="step1">
+    <p> CHỌN ẢNH SẢN PHẨM </p>
+    <svg viewBox="0 0 24 24" style="width: 40px;" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+        <g id="SVGRepo_iconCarrier">
+            <path d="M12 15L12 2M12 2L15 5.5M12 2L9 5.5" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="M8 22.0002H16C18.8284 22.0002 20.2426 22.0002 21.1213 21.1215C22 20.2429 22 18.8286 22 16.0002V15.0002C22 12.1718 22 10.7576 21.1213 9.8789C20.3529 9.11051 19.175 9.01406 17 9.00195M7 9.00195C4.82497 9.01406 3.64706 9.11051 2.87868 9.87889C2 10.7576 2 12.1718 2 15.0002L2 16.0002C2 18.8286 2 20.2429 2.87868 21.1215C3.17848 21.4213 3.54062 21.6188 4 21.749" stroke="#000000" stroke-width="1.5" stroke-linecap="round"></path>
+        </g>
+    </svg>
+    </label>
     <input type="file" accept="image/*" id="image" on:change={loadImage} />
   </div>
 {/if}
 
 {#if step === "signature"}
   <div class="form-group">
-    <label for="signature" class="step2">CHỌN CHỮ KÝ</label>
+    <label for="signature" class="step2">
+      <p>CHỌN CHỮ KÝ</p>
+      <svg viewBox="0 0 24 24" style="width: 40px;" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+          <g id="SVGRepo_iconCarrier">
+              <path d="M12 15L12 2M12 2L15 5.5M12 2L9 5.5" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+              <path d="M8 22.0002H16C18.8284 22.0002 20.2426 22.0002 21.1213 21.1215C22 20.2429 22 18.8286 22 16.0002V15.0002C22 12.1718 22 10.7576 21.1213 9.8789C20.3529 9.11051 19.175 9.01406 17 9.00195M7 9.00195C4.82497 9.01406 3.64706 9.11051 2.87868 9.87889C2 10.7576 2 12.1718 2 15.0002L2 16.0002C2 18.8286 2 20.2429 2.87868 21.1215C3.17848 21.4213 3.54062 21.6188 4 21.749" stroke="#000000" stroke-width="1.5" stroke-linecap="round"></path>
+          </g>
+      </svg>
+    </label>
     <input type="file" accept="image/*" id="signature" on:change={loadSignature} />
   </div>
 {/if}
@@ -211,6 +231,7 @@
   .footer { position:fixed;bottom:0px;width:100%; }
   .preview-img {
     max-height: 90%;
+    max-width: 95%;
     border: 1px solid;
     object-fit: contain;
   }
@@ -220,15 +241,6 @@
   }
   input {
     display: none;
-  }
-  .form-group label {
-    text-align: center;
-    position: absolute;
-    cursor: pointer;
-    bottom: 50px;
-    margin: 10px;
-    padding: 30px;
-    min-width: 100px;
   }
   .preview-btn {
     font-size: 14px;
@@ -284,6 +296,17 @@
     width: 100%;
     display: flex;
     justify-content: center;
+    align-items: center;
+
+    & label {
+      text-align: center;
+      align-content: center;
+      cursor: pointer;
+      margin: 10px;
+      min-width: 100px;
+      width: 60vw;
+      height: 60vh;
+    }
   }
 
   /* Safari */
