@@ -47,15 +47,6 @@
       }
   }
 
-  async function request(input: RequestInfo, init?: RequestInit): Promise<[null, Response] | [Error, null]> {
-    try {
-      const res = await fetch(input, init);
-      return [null, res];
-    } catch(e: any) {
-        return [e, null];
-    }
-  }
-
   async function createCanvas(step: Step, canvasRef: HTMLCanvasElement, image: File, signature: File) {
     if (!browser || step !== "edit" || !canvasRef) return;
     loading = true;
@@ -122,7 +113,7 @@
     loading = true;
     try {
       const imageData = canvas.toDataURL({ format: "jpeg", multiplier, quality: 0.92 });
-      const [err0, img] = await request(imageData);
+      const [err0, img] = await resolve<Response>(fetch(imageData));
       if (err0) {
         throw new Error("Failed to export Image from canvas");
       }
@@ -130,25 +121,23 @@
       if (err2) {
         throw new Error("Failed to get blob");
       };
-      const formData = new FormData();
-      formData.append("image", imgBlob);
-      const [err1, response] = await request("/api", {
-        method: "POST",
-        body: formData,
-      });
+      const body = new FormData();
+      body.append("image", imgBlob);
+      const [err1, response] = await resolve(fetch("/api", { method: "POST", body, }));
 
       if (err1) {
         throw new Error("Failed to Upload file");
       }
 
-      if (!err1 && response.ok) {
-        const { fileName } = await response.json();
-        if (!fileName) {
-          throw new Error("Missing fileName in response body");
-        }
-        loading = false;
-        return window.location.href = `/api/${fileName}`;
+      const [err3, res] = await resolve(response.json());
+      if (err3) {
+        throw new Error("Failed to get json response");
       }
+      if (!res.fileName) {
+        throw new Error("Missing fileName in response body");
+      }
+      loading = false;
+      return window.location.href = `/api/${res.fileName}`;
     } catch(e: any) {
       loading = false;
       return panic("Đã có lỗi xảy ra vui lòng thử lại sau! " + e.message);
