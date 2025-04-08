@@ -123,13 +123,13 @@
       };
       const body = new FormData();
       body.append("image", imgBlob);
-      const [err1, response] = await resolve(fetch("/api", { method: "POST", body, }));
+      const [err1, uploadReq] = await resolve(fetch("/api", { method: "POST", body, }));
 
       if (err1) {
         throw new Error("Failed to Upload file");
       }
 
-      const [err3, res] = await resolve(response.json());
+      const [err3, res] = await resolve(uploadReq.json());
       if (err3) {
         throw new Error("Failed to get json response");
       }
@@ -140,6 +140,7 @@
       return window.location.href = `/api/${res.fileName}`;
     } catch(e: any) {
       loading = false;
+      console.log(e);
       return panic("Đã có lỗi xảy ra vui lòng thử lại sau! " + e.message);
     }
   }

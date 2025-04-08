@@ -1,5 +1,5 @@
 import path from 'path';
-import { error, type RequestHandler } from '@sveltejs/kit';
+import { error, type RequestHandler, json } from '@sveltejs/kit';
 import { writeFile, unlink } from 'fs/promises';
 import { RateLimiter } from 'sveltekit-rate-limiter/server';
 import { v4 as uuid  } from 'uuid';
@@ -36,7 +36,6 @@ function getFilePath(fileName: string) {
 
 export const POST: RequestHandler = async (event) => {
   if (await limiter.isLimited(event)) throw error(429);
-  event.setHeaders({ "Content-Type": "application/json" });
 
   const [err, formData] = await resolve<FormData>(event.request.formData());
   if (err) {
@@ -53,13 +52,9 @@ export const POST: RequestHandler = async (event) => {
   }
   const [err2] = await resolve(writeFile(getFilePath(fileName), new Uint8Array(buffer)));
   if (err2) {
-    throw error(500, "cannot writw file");
+    throw error(500, "cannot write file");
   }
 
-  scheduleDelete(fileName, 60 * 3);
-  return new Response(JSON.stringify({ fileName }), {
-    headers: {
-      "Content-Type": "application/json",
-    }
-  });
+  Promise.resolve(() => scheduleDelete(fileName, 60 * 3));
+  return json({ fileName });
 }
