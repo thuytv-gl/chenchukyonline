@@ -110,6 +110,28 @@
     step = "edit";
   }
 
+  function uploadFile(url: string, formData: FormData): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      xhr.open('POST', url);
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(xhr.response);
+        } else {
+          reject(new Error(`Request failed with status ${xhr.status}: ${xhr.statusText}`));
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new Error('There was a network error.'));
+      };
+
+      xhr.send(formData); // No need to set Content-Type for FormData
+    });
+  }
+
   function base64ToFile(dataUrl: string, filename: string) {
     // Extract the MIME type and base64 data
     const arr = dataUrl.split(',');
@@ -128,6 +150,16 @@
     return new File([u8arr], filename, { type: mime });
   }
 
+  function jsonParse(data: string): Promise<any> {     
+    return new Promise((rs, rj) => {
+        try {
+            rs(JSON.parse(data));
+        } catch(e: any) {
+            rj(e);
+          }
+      });
+  }
+
   async function preview() {
     loading = true;
     try {
@@ -135,26 +167,25 @@
       const imgFile = base64ToFile(imageData, uuid().split("-")[0]);
       const body = new FormData();
       body.append("image", imgFile);
-      const [err1, uploadReq] = await resolve(fetch(
-        `${window.location.origin}/api`,
-        { method: "POST", body, }
-      ));
+      const [err1, res] = await resolve<string>(uploadFile("/api", body));
 
       if (err1) {
         console.error("upload file");
         throw err1;
       }
 
-      const [err3, res] = await resolve(uploadReq.json());
-      if (err3) {
+      const [err2, data] = await resolve<{ fileName: string }>(jsonParse(res));
+
+      if (err2) {
         console.error("parse json");
-        throw err3;
+        throw err2;
       }
-      if (!res.fileName) {
+
+      if (!data.fileName) {
         throw new Error("Missing fileName in response body");
       }
       loading = false;
-      return window.location.href = `/api/${res.fileName}`;
+      return window.location.href = `/api/${data.fileName}`;
     } catch(e: any) {
       loading = false;
       console.log(e);
