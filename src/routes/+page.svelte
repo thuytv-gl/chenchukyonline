@@ -119,19 +119,22 @@
       }
       const [err2, imgBlob] = await resolve<Blob>(img.blob());
       if (err2) {
-        throw new Error("Failed to get blob");
+        console.error("Failed to get blob");
+        throw err2;
       };
       const body = new FormData();
       body.append("image", imgBlob);
       const [err1, uploadReq] = await resolve(fetch("/api", { method: "POST", body, }));
 
       if (err1) {
-        throw new Error("Failed to Upload file");
+        console.error("upload file");
+        throw err1;
       }
 
       const [err3, res] = await resolve(uploadReq.json());
       if (err3) {
-        throw new Error("Failed to get json response");
+        console.error("parse json");
+        throw err3;
       }
       if (!res.fileName) {
         throw new Error("Missing fileName in response body");

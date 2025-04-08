@@ -35,26 +35,31 @@ function getFilePath(fileName: string) {
 }
 
 export const POST: RequestHandler = async (event) => {
-  if (await limiter.isLimited(event)) throw error(429);
+  try {
+    if (await limiter.isLimited(event)) throw error(429);
 
-  const [err, formData] = await resolve<FormData>(event.request.formData());
-  if (err) {
-    throw error(400, "missing form data");
-  }
-  const file = formData.get('image') as File | undefined;
-  if (!file) {
-    throw error(400, "No file uploaded");
-  }
-  const fileName = uuid().split("-")[0] + ".jpeg";
-  const [err1, buffer] = await resolve(file.arrayBuffer());
-  if (err1) {
-    throw error(500, "cannot get file buffer");
-  }
-  const [err2] = await resolve(writeFile(getFilePath(fileName), new Uint8Array(buffer)));
-  if (err2) {
-    throw error(500, "cannot write file");
-  }
+    const [err, formData] = await resolve<FormData>(event.request.formData());
+    if (err) {
+      throw error(400, "missing form data");
+    }
+    const file = formData.get('image') as File | undefined;
+    if (!file) {
+      throw error(400, "No file uploaded");
+    }
+    const fileName = uuid().split("-")[0] + ".jpeg";
+    const [err1, buffer] = await resolve(file.arrayBuffer());
+    if (err1) {
+      throw error(500, "cannot get file buffer");
+    }
+    const [err2] = await resolve(writeFile(getFilePath(fileName), new Uint8Array(buffer)));
+    if (err2) {
+      throw error(500, "cannot write file");
+    }
 
-  Promise.resolve(() => scheduleDelete(fileName, 60 * 3));
-  return json({ fileName });
+    Promise.resolve(() => scheduleDelete(fileName, 60 * 3));
+    return json({ fileName });
+  } catch(e: any) {
+    console.log(e);
+    throw e;
+  }
 }
