@@ -1,3 +1,7 @@
+<svelte:head>
+	<title> Chữ Ký 39k / Zalo:  0389393894 </title>
+</svelte:head>
+
 <div class="h-[5vh] w-full border-b center">
   <h1 class="m-auto text-red-600 text-lg font-bold">
     Chữ Ký 39k / Zalo:  0389393894
