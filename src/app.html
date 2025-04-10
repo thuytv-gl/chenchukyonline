@@ -5,6 +5,17 @@
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width" />
 		<style>
+      :root {
+        --primary: #3498db;
+        --primary-dark: #2c80b4;
+        --accent: #f39c12;
+        --secondary: #7f8c8d;
+        --bg-light: #f4f6f8;
+        --content-bg: #e8f5e9;
+        --footer-bg: #ffffff;
+        --border-radius: 0.5rem;
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
 			html, body {
 				padding: 0;
 				margin: 0;
@@ -16,10 +27,20 @@
         padding: 0;
         margin: 0;
       }
+      .screen-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }
 		</style>
 		%sveltekit.head%
+    <title>Chèn Chữ Ký online</title>
 	</head>
 	<body data-sveltekit-preload-data="hover">
-    %sveltekit.body%
+    <div class="screen-container">%sveltekit.body%</div>
 	</body>
 </html>

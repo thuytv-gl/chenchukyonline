@@ -1,12 +1,8 @@
-<head>
-<title>Chèn Chữ Ký online</title>
-</head>
-
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { browser } from "$app/environment";
   import { calcRatio, createImage, toDataUrl, iOS } from "$lib";
-  import Canvas from "./Canvas";
-  import { onMount } from 'svelte';
+  import Canvas from "$lib/Canvas";
 
   import { createScreenLogger } from '$lib/debugConsole';
 
@@ -149,153 +145,231 @@
     });
 </script>
 
-<div class="container">
-  <div class="step" style={step === "edit" ? "display: flex;" : "display: none;"}>
-    <div class="fcenter" style="position: absolute; top 20px;">
-      <canvas bind:this={canvasRef} id="canvas"></canvas>
-    </div>
-    <div class="fcenter footer" style="flex-direction: column;">
-      <div class="fcenter">
-        <label for="image" class="step1 preview-btn"> CHỌN ẢNH </label>
-        <input type="file" accept="image/*" id="image" on:change={loadImage} />
-        
-        <label for="signature" class="step2 preview-btn"> CHỌN CHỮ KÝ </label>
-        <input type="file" accept="image/*" id="signature" on:change={loadSignature} />
-      </div>
-      
-      <div class="fcenter">
-        {#if ready}
-          <button class="preview-btn history-btn" on:click={() => canvas.undo()}>
-             <svg fill="#ffffff" height="18px" width="18px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 26.676 26.676" xml:space="preserve">
-                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                <g id="SVGRepo_iconCarrier">
-                   <g>
-                      <path d="M26.105,21.891c-0.229,0-0.439-0.131-0.529-0.346l0,0c-0.066-0.156-1.716-3.857-7.885-4.59 c-1.285-0.156-2.824-0.236-4.693-0.25v4.613c0,0.213-0.115,0.406-0.304,0.508c-0.188,0.098-0.413,0.084-0.588-0.033L0.254,13.815 C0.094,13.708,0,13.528,0,13.339c0-0.191,0.094-0.365,0.254-0.477l11.857-7.979c0.175-0.121,0.398-0.129,0.588-0.029 c0.19,0.102,0.303,0.295,0.303,0.502v4.293c2.578,0.336,13.674,2.33,13.674,11.674c0,0.271-0.191,0.508-0.459,0.562 C26.18,21.891,26.141,21.891,26.105,21.891z"></path>
-                   </g>
-                </g>
-             </svg>
-          </button>
-          <button class="preview-btn" on:click={preview}>TẢI ẢNH</button>
-          <button class="preview-btn history-btn" on:click={() => canvas.redo()} style="transform:matrix(-1, 0, 0, 1, 0, 0);">
-             <svg fill="#ffffff" height="18px" width="18px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 26.676 26.676" xml:space="preserve" stroke="#ffffff">
-                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                <g id="SVGRepo_iconCarrier">
-                   <g>
-                      <path d="M26.105,21.891c-0.229,0-0.439-0.131-0.529-0.346l0,0c-0.066-0.156-1.716-3.857-7.885-4.59 c-1.285-0.156-2.824-0.236-4.693-0.25v4.613c0,0.213-0.115,0.406-0.304,0.508c-0.188,0.098-0.413,0.084-0.588-0.033L0.254,13.815 C0.094,13.708,0,13.528,0,13.339c0-0.191,0.094-0.365,0.254-0.477l11.857-7.979c0.175-0.121,0.398-0.129,0.588-0.029 c0.19,0.102,0.303,0.295,0.303,0.502v4.293c2.578,0.336,13.674,2.33,13.674,11.674c0,0.271-0.191,0.508-0.459,0.562 C26.18,21.891,26.141,21.891,26.105,21.891z"></path>
-                   </g>
-                </g>
-             </svg>
-          </button>
-        {/if}
-      </div>
+<h3>
+  Chữ Ký 39k <br/>
+  Zalo: 038.9393.894
+</h3>
+<div class="container" hidden={step !== "edit"}>
+  <canvas bind:this={canvasRef} id="canvas"></canvas>
+</div>
 
+{#if step === "edit"}
+  <div class="footer">
+    <div class="fcenter">
+      <label for="image" class="step1 btn"> CHỌN ẢNH </label>
+      <input type="file" accept="image/*" id="image" on:change={loadImage} />
+      
+      <label for="signature" class="step2 btn"> CHỌN CHỮ KÝ </label>
+      <input type="file" accept="image/*" id="signature" on:change={loadSignature} />
+    </div>
+    <div class="fcenter">
+      {#if ready}
+        <button class="btn history-btn" on:click={() => canvas.undo()}>
+           <svg fill="#ffffff" height="18px" width="18px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 26.676 26.676" xml:space="preserve">
+              <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+              <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+              <g id="SVGRepo_iconCarrier">
+                 <g>
+                    <path d="M26.105,21.891c-0.229,0-0.439-0.131-0.529-0.346l0,0c-0.066-0.156-1.716-3.857-7.885-4.59 c-1.285-0.156-2.824-0.236-4.693-0.25v4.613c0,0.213-0.115,0.406-0.304,0.508c-0.188,0.098-0.413,0.084-0.588-0.033L0.254,13.815 C0.094,13.708,0,13.528,0,13.339c0-0.191,0.094-0.365,0.254-0.477l11.857-7.979c0.175-0.121,0.398-0.129,0.588-0.029 c0.19,0.102,0.303,0.295,0.303,0.502v4.293c2.578,0.336,13.674,2.33,13.674,11.674c0,0.271-0.191,0.508-0.459,0.562 C26.18,21.891,26.141,21.891,26.105,21.891z"></path>
+                 </g>
+              </g>
+           </svg>
+        </button>
+        <button class="btn" on:click={preview}>TẢI ẢNH</button>
+        <button class="btn history-btn" on:click={() => canvas.redo()} style="transform:matrix(-1, 0, 0, 1, 0, 0);">
+           <svg fill="#ffffff" height="18px" width="18px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 26.676 26.676" xml:space="preserve" stroke="#ffffff">
+              <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+              <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+              <g id="SVGRepo_iconCarrier">
+                 <g>
+                    <path d="M26.105,21.891c-0.229,0-0.439-0.131-0.529-0.346l0,0c-0.066-0.156-1.716-3.857-7.885-4.59 c-1.285-0.156-2.824-0.236-4.693-0.25v4.613c0,0.213-0.115,0.406-0.304,0.508c-0.188,0.098-0.413,0.084-0.588-0.033L0.254,13.815 C0.094,13.708,0,13.528,0,13.339c0-0.191,0.094-0.365,0.254-0.477l11.857-7.979c0.175-0.121,0.398-0.129,0.588-0.029 c0.19,0.102,0.303,0.295,0.303,0.502v4.293c2.578,0.336,13.674,2.33,13.674,11.674c0,0.271-0.191,0.508-0.459,0.562 C26.18,21.891,26.141,21.891,26.105,21.891z"></path>
+                 </g>
+              </g>
+           </svg>
+        </button>
+      {/if}
     </div>
   </div>
+{/if}
 
-  <div class="step" style={step === "preview" ? "display: flex;" : "display: none;"}>
-    <img class="preview-img" src={downloadUrl} alt=""/>
-    <div class="fcenter footer" style="flex-direction: column;">
+{@html '<!-- Preview Step -->'}
+{#if step === "preview"}
+  <div class="container">
+    <img src={downloadUrl} alt=""/>
+  </div>
+
+  <div class="footer">
+    <div class="fcenter" style="flex-direction: column;">
         {#if iOS()}
           <h3 style="color: red;font-weight: bold;text-align: center;">
             Nhấn giữ vào ảnh > Thêm vào Ảnh...
           </h3>
         {:else}
-        <a class="preview-btn" href={downloadUrl} download>TẢI ẢNH</a>
+        <a class="btn" href={downloadUrl} download>TẢI ẢNH</a>
       {/if}
-      <button class="preview-btn danger" on:click={() => step = "edit"}>ĐÓNG</button>
+      <button class="btn danger" on:click={() => step = "edit"}>ĐÓNG</button>
     </div>
   </div>
+{/if}
 
-  {#if loading}
-    <div class="fcenter">
-      <div class="loader"></div>
-    </div>
-  {/if}
-</div>
+{#if loading}
+  <div class="loader-container">
+    <div class="loader"></div>
+  </div>
+{/if}
+
 
 <style>
-  .footer { position:fixed;bottom:0px;width:100%; }
-  .preview-img {
-    max-height: 90%;
-    max-width: 95%;
-    border: 1px solid;
-    object-fit: contain;
+  :global(:root) {
+    --primary-color: #3498db;
+    --accent-color: #2ecc71;
+    --danger-color: #e74c3c;
+    --text-light: #ffffff;
+    --btn-radius: 0.5rem;
+    --transition: 0.3s ease;
   }
-  .fcenter {
-    display: flex;
-    justify-content: center;
-  }
-  input {
-    display: none;
-  }
-  .preview-btn {
-    font-size: 14px;
-    text-align: center;
-    align-content: center;
-    margin: 10px;
-    padding: 10px;
-    min-width: 100px;
-    border: none;
-    background: #3498bb;
-    color: white;
-    cursor: pointer;
-  }
-  .history-btn {
-    background: #000000;
-  }
-  .step {
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    & label {
-      cursor: pointer;
-      text-align: center;
-    }
-  }
-  label.step1 {
-    background: blue;
-    color: white;
-  }
-  label.step2 {
-    background: green;
-    color: white;
-  }
-  label:active {
-    background: darkcyan;
-    color: white;
-  }
-  .danger {
-    background-color: red;
-  }
-  .container {
-    width: 100%;
+
+  :global(html, body) {
     height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .container {
+    max-height: 80%;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-  }
-  .loader {
-    border: 16px solid #f3f3f3;
-    border-radius: 50%;
-    border-top: 16px solid #3498db;
-    width: 100px;
-    height: 100px;
-    -webkit-animation: spin 2s linear infinite; /* Safari */
-    animation: spin 2s linear infinite;
-    margin: 10px;
+    background: #f8f9fa;
   }
 
-  /* Safari */
-  @-webkit-keyframes spin {
-    0% { -webkit-transform: rotate(0deg); }
-    100% { -webkit-transform: rotate(360deg); }
+  .footer {
+    bottom: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .preview-img {
+    max-height: 90%;
+    max-width: 95%;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    object-fit: contain;
+  }
+
+  .fcenter {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  input {
+    display: none;
+  }
+
+  .btn,
+  .preview-btn,
+  .history-btn,
+  .danger {
+    font-size: 14px;
+    text-align: center;
+    margin: 8px;
+    padding: 12px 20px;
+    min-width: 120px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(74, 144, 226, 0.2);
+  }
+
+  .btn {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+  }
+
+  .preview-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
+  }
+
+  .preview-btn:active {
+    transform: translateY(0);
+  }
+
+  .history-btn {
+    background: #2C3E50;
+    min-width: 50px;
+    padding: 12px;
+  }
+
+  .step {
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    transition: opacity 0.3s ease;
+  }
+
+  label.step1 {
+    background: #3498DB;
+  }
+
+  label.step2 {
+    background: #27AE60;
+  }
+
+  label:active {
+    background: #2980B9;
+  }
+
+  .danger {
+    background-color: #E74C3C;
+  }
+
+  .loader-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .loader {
+    border: 3px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 3px solid #3498db;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 10px;
   }
 
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
+
+  h3 {
+    color: #E74C3C;
+    font-weight: 600;
+    text-align: center;
+    margin: 1rem 0;
+  }
+
+  canvas {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  *[hidden] {
+    display: none !important;
+  }
 </style>
+
