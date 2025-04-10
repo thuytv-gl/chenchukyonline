@@ -3,14 +3,14 @@
     Chữ Ký 39k / Zalo:  0389393894
   </h1>
 </div>
-<div class="p-5 body h-[85vh] w-full center">
+<div class="p-5 body h-full w-full center">
   <div class="w-full h-full center" class:hidden={step !== "edit"}>
     <canvas bind:this={canvasRef}></canvas>
   </div>
   <img class="max-w-full max-h-full" class:hidden={step !== "preview"} src={downloadUrl} alt=""/>
 </div>
 
-<div class="h-[10vh] w-full center border-t">
+<div class="h-[15vh] w-full center border-t">
   {#if step === "edit"}
     <label for="image" class=""> CHỌN ẢNH </label>
     <input type="file" accept="image/*" id="image" on:change={loadImage} />
@@ -37,8 +37,14 @@
   {/if}
 </div>
 
+{#if loading}
+  <div class="center absolute w-full h-full">
+    <div class="loader"></div>
+  </div>
+{/if}
+
 <script lang="ts">
-  import { Canvas } from "fabric";
+  import Canvas from "$lib/Canvas";
   import { browser } from "$app/environment";
   import { calcRatio, createImage, toDataUrl, iOS } from "$lib";
 
@@ -58,7 +64,6 @@
 
   async function addImage(image?: File) {
     if (!browser || !image || !canvas || !canvasRef) return;
-    loading = true;
 
     const imageUrl = await toDataUrl(image);
     const fImage = await createImage(imageUrl);
@@ -100,7 +105,6 @@
     canvas.requestRenderAll();
 
     multiplier = fImage.width / canvas.width;
-    loading = false;
     ready = true;
   }
 
@@ -131,14 +135,20 @@
     const target = evt.target as HTMLInputElement;
     const file = target?.files?.[0];
     if (!file) { return; }
-    addImage(file);
+    loading = true;
+    addImage(file).finally(() => {
+      loading = false;
+    });
   }
 
   function loadSignature(evt: Event) {
     const target = evt.target as HTMLInputElement;
     const file = target?.files?.[0];
     if (!file) { return; }
-    addSignature(file);
+    loading = true;
+    addSignature(file).finally(() => {
+      loading = false;
+    });
   }
 
   async function preview() {
@@ -154,20 +164,34 @@
 </script>
 
 <style>
+  input {
+      display: none;
+  }
+
+  label, button {
+    padding: 5px;
+    border: 1px solid;
+    margin: 5px;
+  }
+
   .center {
     display: flex;
     justify-content: center;
     align-items: center;
   }
+
   .hidden {
     display: none !important;
   }
-  input {
-      display: none;
-  }
-  label, button {
-    padding: 5px;
-    border: 1px solid;
-    margin: 5px;
+
+  .loader {
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #3498db;
+    width: 100px;
+    height: 100px;
+    -webkit-animation: spin 2s linear infinite; /* Safari */
+    animation: spin 2s linear infinite;
+    margin: 10px;
   }
 </style>

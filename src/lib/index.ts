@@ -1,18 +1,21 @@
 import { browser } from "$app/environment";
-export const calcRatio = (srcWidth: number, srcHeight: number, maxWidth: number, maxHeight: number) => {
+export const calcRatio = (
+  srcWidth: number,
+  srcHeight: number,
+  maxWidth: number,
+  maxHeight: number,
+) => {
   return Math.min(maxWidth / srcWidth, maxHeight / srcHeight);
 }
 
-export const createImage = (url: string) => new Promise<fabric.Image>(async (rs, rj) => {
-  if (!browser) { return; }
-  const { fabric } = await import("fabric");
-  fabric.Image.fromURL(url, img => {
-    if (!img.width || !img.height) {
-      return rj(new Error("failed to load image"));
-    }
-    return rs(img);
-  });
-});
+export const createImage = async (url: string) => {
+  const fabric = await import("fabric");
+  const img = await fabric.FabricImage.fromURL(url);
+  if (!img.width || !img.height) {
+    throw new Error("failed to load image");
+  }
+  return img;
+};
 
 export const toDataUrl = async (file: File): Promise<string> => {
   const blobURL = URL.createObjectURL(file);
@@ -31,6 +34,7 @@ export const iOS = () => {
   if (!browser) {
     return false;
   }
+
   return [
     'iPad Simulator',
     'iPhone Simulator',
@@ -38,7 +42,5 @@ export const iOS = () => {
     'iPad',
     'iPhone',
     'iPod'
-  ].includes(navigator.platform)
-  // iPad on iOS 13 detection
-  || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
+  ].find((a) => navigator.userAgent.includes(a));
 }

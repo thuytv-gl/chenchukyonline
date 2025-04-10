@@ -1,9 +1,20 @@
-import { fabric } from "fabric";
-import type { ICanvasOptions } from "fabric/fabric-impl";
+import {
+  Canvas as FabricCanvas,
+  type TEvent,
+  type TToCanvasElementOptions,
+} from "fabric";
 
 type EvtTuple = [string, () => void];
+// declare the events for typescript
+declare module "fabric" {
+  interface CanvasEvents {
+      [k: string]: Partial<TEvent> & {
+          json: any;
+      };
+  }
+}
 
-export default class Canvas extends fabric.Canvas {
+export default class Canvas extends FabricCanvas {
   private isEditing: boolean;
   private historyUndo: string[];
   private historyRedo: string[];
@@ -12,7 +23,7 @@ export default class Canvas extends fabric.Canvas {
   private historyProcessing: boolean;
   private LISTENT_TO: EvtTuple[];
 
-  constructor(element: HTMLCanvasElement | string | null, options?: ICanvasOptions) {
+  constructor(element: HTMLCanvasElement | string, options?: TToCanvasElementOptions) {
     super(element, options);
     this.isEditing = false;
     this.historyUndo = [];
@@ -26,7 +37,7 @@ export default class Canvas extends fabric.Canvas {
         ['object:modified', this._historySaveAction.bind(this)],
         ['object:skewing', this._historySaveAction.bind(this)]
     ];
-    this._historyEvents();
+    this._historyInit();
   }
 
   onStartEditing(): void { }
@@ -43,16 +54,9 @@ export default class Canvas extends fabric.Canvas {
     this._historySaveAction();
   }
 
-  initialize = (element: HTMLCanvasElement | string | null, options?: ICanvasOptions): Canvas => {
-    super.initialize.call(this, element, options);
-    this._historyInit();
-    return this;
-  }
-
-  dispose(): Canvas {
-    super.dispose.call(this);
+  dispose() {
     this._historyDispose();
-    return this;
+    return super.dispose.call(this);
   }
 
   /**
@@ -63,15 +67,6 @@ export default class Canvas extends fabric.Canvas {
   }
 
   /**
-   * Returns an object with fabricjs event mappings
-   */
-  private _historyEvents() {
-    for (const [evt, func] of this.LISTENT_TO) {
-      this.on(evt, func);
-    }
-  }
-
-  /**
    * Initialization of the plugin
    */
   private _historyInit(): void {
@@ -79,7 +74,9 @@ export default class Canvas extends fabric.Canvas {
     this.historyRedo = [];
     this.extraProps = ['selectable'];
     this.historyNextState = this._historyNext();
-    this._historyEvents();
+    for (const [evt, func] of this.LISTENT_TO) {
+      this.on(evt, func);
+    }
   }
 
   /**
