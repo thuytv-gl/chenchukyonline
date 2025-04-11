@@ -126,6 +126,11 @@
     const sRatio = calcRatio(sImage.width, sImage.height, canvas.width, canvas.height) * 0.6;
     const x = canvas.width / 2 - sImage.width / 2 * sRatio;
     const y = canvas.height - sImage.height * sRatio;
+    sImage.set({
+      transparentCorners: false,
+      cornerColor: "#008236",
+      cornerStyle: "circle",
+    });
     sImage.set("left", x);
     sImage.set("top", y);
     sImage.set("scaleX", sRatio);
