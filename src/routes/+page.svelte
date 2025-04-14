@@ -11,56 +11,66 @@
   <div class="w-full h-full center" class:hidden={step !== "edit"}>
     <canvas bind:this={canvasRef}></canvas>
   </div>
-  <img class="max-w-full max-h-full" class:hidden={step !== "preview"} src={downloadUrl} alt=""/>
+  {#if step === "preview"}
+    <img
+      class="max-w-full max-h-full"
+      onload={scrollBottom}
+      src={downloadUrl} alt="" />
+  {/if}
 </div>
 
-<div class="h-[15vh] w-full center border-t">
+<div class="h-[15vh] w-full center flex-col px-10">
   {#if step === "edit"}
-    <label for="image" class=""> CHỌN ẢNH </label>
-    <input type="file" accept="image/*" id="image" on:change={loadImage} />
+    <label for="image" class="w-full text-center"> CHỌN ẢNH </label>
+    <input type="file" accept="image/*" id="image" onchange={loadImage} />
     
-    <label for="signature" class=""> CHỌN CHỮ KÝ </label>
-    <input type="file" accept="image/*" id="signature" on:change={loadSignature} />
+    {#if hasImage}
+      <label for="signature" class="w-full text-center"> CHỌN CHỮ KÝ </label>
+      <input type="file" accept="image/*" id="signature" onchange={loadSignature} />
+    {/if}
 
-    {#if ready}
-      <button class="preview-btn" on:click={preview}>TẢI ẢNH</button>
+    {#if hasImage && hasSignature}
+      <button class="preview-btn w-full text-center" onclick={preview}>TẢI ẢNH</button>
     {/if}
   {/if}
 
   {#if step === "preview"}
-    <div class="center flex-col">
-        {#if iOS()}
-          <h3 class="text-red-500 text-lg font-medium">
-            Nhấn giữ vào ảnh > Nhấn "thêm vào Ảnh..."
-          </h3>
-        {:else}
-        <a class="preview-btn" href={downloadUrl} download>TẢI ẢNH</a>
+    <div class="center flex-col w-full px-10">
+      {#if iOS()}
+        <h3 class="text-red-500 text-lg font-medium w-full text-center">
+          Nhấn giữ vào ảnh > Nhấn "thêm vào Ảnh..."
+        </h3>
+      {:else}
+        <a class="preview-btn w-full text-center" href={downloadUrl} download>TẢI ẢNH</a>
       {/if}
-      <button class="preview-btn danger" on:click={() => step = "edit"}>ĐÓNG</button>
+      <button class="preview-btn bg-red-500 w-full text-center text-white" onclick={() => step = "edit"}>ĐÓNG</button>
     </div>
   {/if}
 </div>
-
-{#if loading}
-  <div class="center absolute w-full h-full">
-    <div class="loader"></div>
-  </div>
-{/if}
 
 <script lang="ts">
   import Canvas from "$lib/Canvas";
   import { browser } from "$app/environment";
   import { calcRatio, createImage, toDataUrl, iOS } from "$lib";
 
+  let hasImage = $state(false);
+  let hasSignature = $state(false);
   let canvasRef: HTMLCanvasElement | undefined;
   let canvas: Canvas;
-  let ready: boolean = false;
 
   type Step = "edit" | "preview";
-  let step: Step = "edit";
-  let loading: boolean = false;
+  let step = $state<Step>("edit");
   let multiplier = 1;
-  let downloadUrl = "/favicon.png";
+  let downloadUrl = $state("/favicon.png");
+
+  $effect(() => {
+    if (!canvasRef) return;
+    canvas = new Canvas(canvasRef);
+  });
+
+  function scrollBottom() {
+    window.scrollTo(0, document.body.scrollHeight);
+  }
 
   function panic(msg: string) {
     window.alert(msg);
@@ -83,19 +93,12 @@
     }
 
     const ratio = calcRatio(fImage.width, fImage.height, maxW, maxH);
-    const ID = "F_Image";
 
-    canvas.getObjects().forEach((o: any) => {
-      if (o.id === ID) {
-        canvas.remove(o);
-      }
+    canvas.setDimensions({
+      width: fImage.width * ratio,
+      height: fImage.height * ratio,
     });
 
-    canvas.setWidth(fImage.width * ratio);
-    canvas.setHeight(fImage.height * ratio);
-    canvas.calcOffset();
-
-    (fImage as any).id = ID;
     fImage.set("top", 0);
     fImage.set("left", 0);
     fImage.set("scaleX", ratio);
@@ -103,13 +106,12 @@
     fImage.set("selectable", false);
     fImage.set("moveCursor", "none");
     fImage.set("hoverCursor", "auto");
-    canvas.add(fImage);
-    canvas.sendObjectToBack(fImage);
+    canvas.backgroundImage = fImage;
 
+    canvas.calcOffset();
     canvas.requestRenderAll();
 
     multiplier = fImage.width / canvas.width;
-    ready = true;
   }
 
   async function addSignature(signature?: File) {
@@ -139,9 +141,9 @@
     const target = evt.target as HTMLInputElement;
     const file = target?.files?.[0];
     if (!file) { return; }
-    loading = true;
     addImage(file).finally(() => {
-      loading = false;
+      hasImage = true;
+      scrollBottom();
     });
   }
 
@@ -149,9 +151,9 @@
     const target = evt.target as HTMLInputElement;
     const file = target?.files?.[0];
     if (!file) { return; }
-    loading = true;
     addSignature(file).finally(() => {
-      loading = false;
+      hasSignature = true;
+      scrollBottom();
     });
   }
 
@@ -159,12 +161,6 @@
     downloadUrl = canvas.toDataURL({ format: "jpeg", multiplier, quality: 0.92 });
     step = "preview";
   }
-
-  function setupCanvas(ref?: HTMLCanvasElement) {
-    if (!ref) return;
-    canvas = new Canvas(ref);
-  }
-  $: setupCanvas(canvasRef);
 </script>
 
 <style>
@@ -186,16 +182,5 @@
 
   .hidden {
     display: none !important;
-  }
-
-  .loader {
-    border: 16px solid #f3f3f3;
-    border-radius: 50%;
-    border-top: 16px solid #3498db;
-    width: 100px;
-    height: 100px;
-    -webkit-animation: spin 2s linear infinite; /* Safari */
-    animation: spin 2s linear infinite;
-    margin: 10px;
   }
 </style>
